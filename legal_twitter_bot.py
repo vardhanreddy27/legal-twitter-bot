@@ -115,7 +115,8 @@ Legal News:
 Generate ONLY the tweet text, nothing else."""
 
     try:
-        message = groq_client.messages.create(
+        # Use the correct Groq API method
+        response = groq_client.chat.completions.create(
             model="mixtral-8x7b-32768",  # Free Groq model
             max_tokens=300,
             messages=[
@@ -123,7 +124,7 @@ Generate ONLY the tweet text, nothing else."""
             ]
         )
         
-        tweet = message.content[0].text.strip()
+        tweet = response.choices[0].message.content.strip()
         
         # Ensure it's within character limit
         if len(tweet) > 280:
