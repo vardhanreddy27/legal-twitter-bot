@@ -14,13 +14,9 @@ from typing import Optional
 # Initialize Groq client
 groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-# Initialize Twitter client
+# Initialize Twitter client with OAuth 2.0
 twitter_client = tweepy.Client(
     bearer_token=os.getenv("TWITTER_BEARER_TOKEN"),
-    consumer_key=os.getenv("TWITTER_CONSUMER_KEY"),
-    consumer_secret=os.getenv("TWITTER_CONSUMER_SECRET"),
-    access_token=os.getenv("TWITTER_ACCESS_TOKEN"),
-    access_token_secret=os.getenv("TWITTER_ACCESS_TOKEN_SECRET"),
     wait_on_rate_limit=True
 )
 
@@ -172,8 +168,7 @@ def main():
     print(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
     
     # Check for required API keys
-    required_keys = ["GROQ_API_KEY", "TWITTER_BEARER_TOKEN", "TWITTER_CONSUMER_KEY",
-                     "TWITTER_CONSUMER_SECRET", "TWITTER_ACCESS_TOKEN", "TWITTER_ACCESS_TOKEN_SECRET"]
+    required_keys = ["GROQ_API_KEY", "TWITTER_BEARER_TOKEN"]
     
     missing_keys = [key for key in required_keys if not os.getenv(key)]
     
