@@ -1,20 +1,26 @@
 #!/usr/bin/env python3
 """
 Legal News Twitter Bot - Automated posts about AP, Delhi HC, Kadapa court cases
-Uses Groq for content generation and Twitter API v2 for posting
+Uses Groq for content generation and Twitter API v1.1 with OAuth 1.0a
 """
 
 import os
 import requests
 from datetime import datetime
 from groq import Groq
+from requests_oauthlib import OAuth1Session
 
 # Initialize Groq client
 groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-# Twitter API v2 endpoint
-TWITTER_API_URL = "https://api.twitter.com/2/tweets"
-TWITTER_BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN")
+# Twitter API v1.1 endpoint for posting tweets
+TWITTER_API_URL = "https://api.twitter.com/1.1/statuses/update.json"
+
+# Get Twitter credentials from environment
+CONSUMER_KEY = os.getenv("TWITTER_CONSUMER_KEY")
+CONSUMER_SECRET = os.getenv("TWITTER_CONSUMER_SECRET")
+ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
+ACCESS_TOKEN_SECRET = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
 
 
 def search_legal_news() -> str:
@@ -131,7 +137,7 @@ Generate ONLY the tweet text, nothing else."""
 
 def post_to_twitter(tweet_text: str) -> bool:
     """
-    Post the generated tweet to Twitter using Twitter API v2
+    Post the generated tweet to Twitter using OAuth 1.0a User Context
     """
     if not tweet_text:
         print("❌ No tweet text provided")
@@ -140,21 +146,21 @@ def post_to_twitter(tweet_text: str) -> bool:
     try:
         print(f"📤 Posting to Twitter: {tweet_text[:50]}...")
         
-        # Use Twitter API v2 directly with Bearer Token
-        headers = {
-            "Authorization": f"Bearer {TWITTER_BEARER_TOKEN}",
-            "Content-Type": "application/json"
-        }
+        # Create OAuth 1.0a session
+        twitter = OAuth1Session(
+            CONSUMER_KEY,
+            client_secret=CONSUMER_SECRET,
+            resource_owner_key=ACCESS_TOKEN,
+            resource_owner_secret=ACCESS_TOKEN_SECRET
+        )
         
-        data = {
-            "text": tweet_text
-        }
+        # Post the tweet
+        payload = {"status": tweet_text}
+        response = twitter.post(TWITTER_API_URL, json=payload)
         
-        response = requests.post(TWITTER_API_URL, headers=headers, json=data)
-        
-        if response.status_code == 201:
+        if response.status_code == 200:
             response_data = response.json()
-            tweet_id = response_data.get("data", {}).get("id")
+            tweet_id = response_data.get("id")
             print(f"✅ Tweet posted successfully! Tweet ID: {tweet_id}")
             return True
         else:
@@ -176,8 +182,9 @@ def main():
     print("="*60)
     print(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
     
-    # Check for required API keys (only Bearer Token needed for OAuth 2.0)
-    required_keys = ["GROQ_API_KEY", "TWITTER_BEARER_TOKEN"]
+    # Check for required API keys
+    required_keys = ["GROQ_API_KEY", "TWITTER_CONSUMER_KEY", "TWITTER_CONSUMER_SECRET",
+                     "TWITTER_ACCESS_TOKEN", "TWITTER_ACCESS_TOKEN_SECRET"]
     
     missing_keys = [key for key in required_keys if not os.getenv(key)]
     
