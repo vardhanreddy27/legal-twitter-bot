@@ -115,9 +115,9 @@ Legal News:
 Generate ONLY the tweet text, nothing else."""
 
     try:
-        # Use the correct Groq API method
+        # Use the correct Groq API method with latest working model
         response = groq_client.chat.completions.create(
-            model="mixtral-8x7b-32768",  # Free Groq model
+            model="llama-3.1-8b-instant",  # Latest working Groq model (free tier)
             max_tokens=300,
             messages=[
                 {"role": "user", "content": prompt}
