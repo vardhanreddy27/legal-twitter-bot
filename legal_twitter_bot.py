@@ -1,23 +1,20 @@
 #!/usr/bin/env python3
 """
 Legal News Twitter Bot - Automated posts about AP, Delhi HC, Kadapa court cases
-Uses Groq for content generation and Twitter API for posting
+Uses Groq for content generation and Twitter API v2 for posting
 """
 
 import os
 import requests
 from datetime import datetime
 from groq import Groq
-import tweepy
 
 # Initialize Groq client
 groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-# Initialize Twitter client with Bearer Token only (OAuth 2.0)
-twitter_client = tweepy.Client(
-    bearer_token=os.getenv("TWITTER_BEARER_TOKEN"),
-    wait_on_rate_limit=True
-)
+# Twitter API v2 endpoint
+TWITTER_API_URL = "https://api.twitter.com/2/tweets"
+TWITTER_BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN")
 
 
 def search_legal_news() -> str:
@@ -134,7 +131,7 @@ Generate ONLY the tweet text, nothing else."""
 
 def post_to_twitter(tweet_text: str) -> bool:
     """
-    Post the generated tweet to Twitter using OAuth 2.0
+    Post the generated tweet to Twitter using Twitter API v2
     """
     if not tweet_text:
         print("❌ No tweet text provided")
@@ -143,14 +140,26 @@ def post_to_twitter(tweet_text: str) -> bool:
     try:
         print(f"📤 Posting to Twitter: {tweet_text[:50]}...")
         
-        # Use OAuth 2.0 to create tweet
-        response = twitter_client.create_tweet(text=tweet_text)
+        # Use Twitter API v2 directly with Bearer Token
+        headers = {
+            "Authorization": f"Bearer {TWITTER_BEARER_TOKEN}",
+            "Content-Type": "application/json"
+        }
         
-        if response.data and response.data.get("id"):
-            print(f"✅ Tweet posted successfully! Tweet ID: {response.data['id']}")
+        data = {
+            "text": tweet_text
+        }
+        
+        response = requests.post(TWITTER_API_URL, headers=headers, json=data)
+        
+        if response.status_code == 201:
+            response_data = response.json()
+            tweet_id = response_data.get("data", {}).get("id")
+            print(f"✅ Tweet posted successfully! Tweet ID: {tweet_id}")
             return True
         else:
-            print("❌ Failed to post tweet")
+            print(f"❌ Failed to post tweet. Status code: {response.status_code}")
+            print(f"Response: {response.text}")
             return False
     
     except Exception as e:
