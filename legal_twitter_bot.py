@@ -9,12 +9,11 @@ import requests
 from datetime import datetime
 from groq import Groq
 import tweepy
-from typing import Optional
 
 # Initialize Groq client
 groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-# Initialize Twitter client with OAuth 2.0
+# Initialize Twitter client with Bearer Token only (OAuth 2.0)
 twitter_client = tweepy.Client(
     bearer_token=os.getenv("TWITTER_BEARER_TOKEN"),
     wait_on_rate_limit=True
@@ -135,7 +134,7 @@ Generate ONLY the tweet text, nothing else."""
 
 def post_to_twitter(tweet_text: str) -> bool:
     """
-    Post the generated tweet to Twitter
+    Post the generated tweet to Twitter using OAuth 2.0
     """
     if not tweet_text:
         print("❌ No tweet text provided")
@@ -144,6 +143,7 @@ def post_to_twitter(tweet_text: str) -> bool:
     try:
         print(f"📤 Posting to Twitter: {tweet_text[:50]}...")
         
+        # Use OAuth 2.0 to create tweet
         response = twitter_client.create_tweet(text=tweet_text)
         
         if response.data and response.data.get("id"):
@@ -167,7 +167,7 @@ def main():
     print("="*60)
     print(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
     
-    # Check for required API keys
+    # Check for required API keys (only Bearer Token needed for OAuth 2.0)
     required_keys = ["GROQ_API_KEY", "TWITTER_BEARER_TOKEN"]
     
     missing_keys = [key for key in required_keys if not os.getenv(key)]
